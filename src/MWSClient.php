@@ -1085,7 +1085,7 @@ class MWSClient{
      * @param string $ReportId
      * @return array on succes
      */
-    public function GetReport($ReportId)
+    public function GetRequestedReport($ReportId)
     {
         $status = $this->GetReportRequestStatus($ReportId);
 
@@ -1112,6 +1112,25 @@ class MWSClient{
         } else {
             return false;
         }
+    }
+
+    public function GetReport($ReportId)
+    {
+        $result = $this->request('GetReport', [
+            'ReportId' => $ReportId
+        ]);
+
+        if (is_string($result)) {
+            $csv = Reader::createFromString($result);
+            $csv->setDelimiter("\t");
+            $headers = $csv->fetchOne();
+            $result = [];
+            foreach ($csv->setOffset(1)->fetchAll() as $row) {
+                $result[] = array_combine($headers, $row);
+            }
+        }
+
+        return $result;
     }
 
     /**
